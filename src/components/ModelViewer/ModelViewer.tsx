@@ -4,7 +4,6 @@ import { Canvas, useThree } from "@react-three/fiber";
 import { 
   OrbitControls, 
   Stage, 
-  useGLTF, 
   Html, 
   Environment, 
   Grid,
@@ -20,12 +19,17 @@ import { loadModel, SupportedFormat } from "@/utils/modelLoaders";
 const Model = ({ url }: { url: string }) => {
   const [model, setModel] = useState<THREE.Object3D | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const { camera } = useThree();
   
   useEffect(() => {
+    setLoading(true);
+    setError(null);
+    
     loadModel(url)
       .then(loadedModel => {
         setModel(loadedModel);
+        setLoading(false);
         
         // Center and fit camera to model
         const box = new THREE.Box3().setFromObject(loadedModel);
@@ -34,23 +38,31 @@ const Model = ({ url }: { url: string }) => {
         
         // Calculate camera position based on object size
         const maxDim = Math.max(size.x, size.y, size.z);
-        let cameraZ = maxDim * 2; // Simple positioning based on size
+        let cameraZ = maxDim * 2.5; // Adjusted positioning based on size
         
-        camera.position.set(0, 0, cameraZ);
+        // Position camera to look at center of model
+        camera.position.set(center.x, center.y, center.z + cameraZ);
         camera.lookAt(center);
+        
+        console.log("Model loaded successfully:", loadedModel);
       })
       .catch(err => {
         console.error("Error loading model:", err);
         setError(`Failed to load model: ${err.message}`);
+        setLoading(false);
       });
   }, [url, camera]);
+  
+  if (loading) {
+    return <Html center><div className="bg-gray-800 p-4 rounded text-white">Loading model...</div></Html>;
+  }
   
   if (error) {
     return <Html center><div className="bg-red-900 p-4 rounded text-white">{error}</div></Html>;
   }
   
   if (!model) {
-    return <Html center><div className="text-white">Loading model...</div></Html>;
+    return <Html center><div className="bg-orange-900 p-4 rounded text-white">No model data available</div></Html>;
   }
   
   return <primitive object={model} />;
@@ -81,6 +93,7 @@ const ModelViewer = () => {
   // Handle file selection
   const handleFileSelected = (file: File) => {
     const url = URL.createObjectURL(file);
+    console.log("File selected:", file.name, "URL:", url);
     setModelUrl(url);
   };
 

@@ -1,5 +1,8 @@
 
 import * as THREE from 'three';
+import { STLLoader } from 'three/examples/jsm/loaders/STLLoader';
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
 export type SupportedFormat = 'gltf' | 'glb' | 'obj' | 'stl';
 
@@ -23,17 +26,53 @@ export const createDefaultMaterial = (): THREE.Material => {
   });
 };
 
-// Simplified loader that relies on @react-three/drei's built-in loaders
+// Load model based on file format
 export const loadModel = async (url: string): Promise<THREE.Object3D> => {
-  // This is a simplified version that returns a promise
-  // In reality, we're using @react-three/drei's useLoader in the component itself
+  const format = getFileFormat(url);
+  
+  if (!format) {
+    throw new Error('Unsupported file format');
+  }
+  
   return new Promise((resolve, reject) => {
-    // Create a placeholder object - the actual loading happens in the component
-    const geometry = new THREE.BoxGeometry(1, 1, 1);
-    const material = createDefaultMaterial();
-    const mesh = new THREE.Mesh(geometry, material);
-    
-    // This mesh will be replaced by the actual loaded model in the component
-    resolve(mesh);
+    switch(format) {
+      case 'stl':
+        const stlLoader = new STLLoader();
+        stlLoader.load(
+          url,
+          (geometry) => {
+            const material = createDefaultMaterial();
+            const mesh = new THREE.Mesh(geometry, material);
+            resolve(mesh);
+          },
+          undefined,
+          (error) => reject(new Error(`STL loading error: ${error}`))
+        );
+        break;
+        
+      case 'obj':
+        const objLoader = new OBJLoader();
+        objLoader.load(
+          url,
+          (object) => resolve(object),
+          undefined,
+          (error) => reject(new Error(`OBJ loading error: ${error}`))
+        );
+        break;
+        
+      case 'glb':
+      case 'gltf':
+        const gltfLoader = new GLTFLoader();
+        gltfLoader.load(
+          url,
+          (gltf) => resolve(gltf.scene),
+          undefined,
+          (error) => reject(new Error(`GLTF loading error: ${error}`))
+        );
+        break;
+        
+      default:
+        reject(new Error(`Format ${format} not implemented`));
+    }
   });
 };
