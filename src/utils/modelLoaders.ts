@@ -1,8 +1,8 @@
 
 import * as THREE from 'three';
-import { STLLoader } from 'three/examples/jsm/loaders/STLLoader';
-import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { STLLoader } from 'three/addons/loaders/STLLoader.js';
+import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 export type SupportedFormat = 'gltf' | 'glb' | 'obj' | 'stl';
 
