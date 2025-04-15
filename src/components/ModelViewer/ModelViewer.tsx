@@ -14,6 +14,7 @@ import { SceneControls } from "@/components/ui/scene-controls";
 import FileDropZone from "@/components/FileDropZone";
 import * as THREE from 'three';
 import { loadModel, SupportedFormat } from "@/utils/modelLoaders";
+import { useToast } from "@/hooks/use-toast";
 
 // Model component that handles various 3D formats
 const Model = ({ url }: { url: string }) => {
@@ -21,10 +22,13 @@ const Model = ({ url }: { url: string }) => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const { camera } = useThree();
+  const { toast } = useToast();
   
   useEffect(() => {
     setLoading(true);
     setError(null);
+    
+    console.log("Attempting to load model from:", url);
     
     loadModel(url)
       .then(loadedModel => {
@@ -45,13 +49,22 @@ const Model = ({ url }: { url: string }) => {
         camera.lookAt(center);
         
         console.log("Model loaded successfully:", loadedModel);
+        toast({
+          title: "Model loaded successfully",
+          description: "3D model has been rendered.",
+        });
       })
       .catch(err => {
         console.error("Error loading model:", err);
         setError(`Failed to load model: ${err.message}`);
         setLoading(false);
+        toast({
+          title: "Error loading model",
+          description: err.message,
+          variant: "destructive",
+        });
       });
-  }, [url, camera]);
+  }, [url, camera, toast]);
   
   if (loading) {
     return <Html center><div className="bg-gray-800 p-4 rounded text-white">Loading model...</div></Html>;
@@ -89,12 +102,21 @@ const ModelViewer = () => {
   const [showGrid, setShowGrid] = useState(true);
   const [environment, setEnvironment] = useState("city");
   const [showShadow, setShowShadow] = useState(true);
+  const { toast } = useToast();
   
   // Handle file selection
   const handleFileSelected = (file: File) => {
+    // Log details about the file for debugging
+    console.log("File selected:", file.name, "Type:", file.type, "Size:", file.size);
+    
     const url = URL.createObjectURL(file);
     console.log("File selected:", file.name, "URL:", url);
     setModelUrl(url);
+    
+    toast({
+      title: "Processing 3D model",
+      description: `Loading ${file.name}...`,
+    });
   };
 
   // Handle screenshot

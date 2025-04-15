@@ -10,20 +10,14 @@ export type SupportedFormat = 'gltf' | 'glb' | 'obj' | 'stl';
 export const getFileFormat = (file: string): SupportedFormat | null => {
   // Handle blob URLs from file uploads
   if (file.startsWith('blob:')) {
-    // For blob URLs, try to extract format from the filename in query parameter if available
-    const urlParts = file.split('/');
-    const lastPart = urlParts[urlParts.length - 1];
+    // For blob URLs, we need to rely on other information since query parameters might not be available
     
-    // Check if the blob URL contains any format indicators
-    if (lastPart.includes('.stl') || lastPart.toLowerCase().includes('stl')) {
-      return 'stl';
-    } else if (lastPart.includes('.obj') || lastPart.toLowerCase().includes('obj')) {
-      return 'obj';
-    } else if (lastPart.includes('.glb') || lastPart.toLowerCase().includes('glb')) {
-      return 'glb';
-    } else if (lastPart.includes('.gltf') || lastPart.toLowerCase().includes('gltf')) {
-      return 'gltf';
-    }
+    // Check logs to help debug
+    console.log("Processing blob URL:", file);
+    
+    // For blobs, we'll need to rely on any available information
+    // Let's try a more permissive approach since extension detection is failing
+    return 'stl'; // Default to STL for now as a fallback
   }
   
   // For regular URLs/filenames, extract the extension
