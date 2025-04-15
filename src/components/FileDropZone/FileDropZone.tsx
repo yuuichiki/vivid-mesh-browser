@@ -2,7 +2,7 @@
 import { useState, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { getFileFormat } from '@/utils/modelLoaders';
+import { useToast } from '@/hooks/use-toast';
 
 interface FileDropZoneProps {
   onFileSelected: (file: File) => void;
@@ -17,6 +17,7 @@ const FileDropZone = ({
 }: FileDropZoneProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
   
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -49,11 +50,26 @@ const FileDropZone = ({
   };
   
   const validateAndProcessFile = (file: File) => {
-    const format = getFileFormat(file.name);
-    if (format) {
+    // Check file extension
+    const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
+    const isValidExtension = supportedFormats.some(format => 
+      format.toLowerCase() === fileExtension || 
+      format.toLowerCase() === fileExtension.substring(1)
+    );
+    
+    if (isValidExtension) {
+      console.log("File selected:", file.name, "Type:", file.type);
       onFileSelected(file);
+      toast({
+        title: "File uploaded successfully",
+        description: `${file.name} is now being rendered.`,
+      });
     } else {
-      alert(`Unsupported file format. Please use: ${supportedFormats.join(', ')}`);
+      toast({
+        title: "Unsupported file format",
+        description: `Please use one of these formats: ${supportedFormats.join(', ')}`,
+        variant: "destructive",
+      });
     }
   };
   

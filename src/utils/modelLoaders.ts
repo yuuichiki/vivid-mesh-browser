@@ -8,6 +8,25 @@ export type SupportedFormat = 'gltf' | 'glb' | 'obj' | 'stl';
 
 // Determine file format from filename or URL
 export const getFileFormat = (file: string): SupportedFormat | null => {
+  // Handle blob URLs from file uploads
+  if (file.startsWith('blob:')) {
+    // For blob URLs, try to extract format from the filename in query parameter if available
+    const urlParts = file.split('/');
+    const lastPart = urlParts[urlParts.length - 1];
+    
+    // Check if the blob URL contains any format indicators
+    if (lastPart.includes('.stl') || lastPart.toLowerCase().includes('stl')) {
+      return 'stl';
+    } else if (lastPart.includes('.obj') || lastPart.toLowerCase().includes('obj')) {
+      return 'obj';
+    } else if (lastPart.includes('.glb') || lastPart.toLowerCase().includes('glb')) {
+      return 'glb';
+    } else if (lastPart.includes('.gltf') || lastPart.toLowerCase().includes('gltf')) {
+      return 'gltf';
+    }
+  }
+  
+  // For regular URLs/filenames, extract the extension
   const extension = file.split('.').pop()?.toLowerCase();
   
   if (['gltf', 'glb', 'obj', 'stl'].includes(extension || '')) {
@@ -29,6 +48,8 @@ export const createDefaultMaterial = (): THREE.Material => {
 // Load model based on file format
 export const loadModel = async (url: string): Promise<THREE.Object3D> => {
   const format = getFileFormat(url);
+  
+  console.log("Detected format:", format, "for URL:", url);
   
   if (!format) {
     throw new Error('Unsupported file format');
